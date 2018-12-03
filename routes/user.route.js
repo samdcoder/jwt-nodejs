@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const User = require('../models/user.models');
+const jwt = require('jsonwebtoken');
 
 router.post('/signup', function(req, res){
     bcrypt.hash(req.body.password, 10, function(err, hash){
@@ -38,29 +39,32 @@ router.post('/signin', function(req, res){
     .then(function(user){
         bcrypt.compare(req.body.password, user.password, function(err, result){
             if(err){
-                console.log("in the error of bcrypt compare");
                 return res.status(401).json({
                     failed: 'Unauthorized access'
                 });
             }
             if(result){
-                console.log("in the result of bcyrpt compare")
+                const JWTToken = jwt.sign({
+                    email: user.email,
+                    _id: user._id
+                },
+                'secret',
+                {
+                    expiresIn: '2h'
+                }
+                );
                 return res.status(200).json({
-                    success: 'Welcome to the application!'
-                });
-                return res.status(401).json({
-                    failed: 'Unauthorized access'
+                    success: 'Welcome to the application!',
+                    token: JWTToken
                 });
             }
-            else{
-                return res.status(401).json({
-                    failed: 'Unauthorized access'
-                });
-            }
+            return res.status(401).json({
+                failed: 'Unauthorized access'
+            });
+        
         });
     })
     .catch(error => {
-        console.log("in the error of mongo");
         res.status(500).json({
             error: error
         })
