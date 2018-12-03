@@ -32,7 +32,39 @@ router.post('/signup', function(req, res){
 });
 
 router.post('/signin', function(req, res){
-
+    console.log("in the signin");
+    User.findOne({email: req.body.email})
+    .exec()
+    .then(function(user){
+        bcrypt.compare(req.body.password, user.password, function(err, result){
+            if(err){
+                console.log("in the error of bcrypt compare");
+                return res.status(401).json({
+                    failed: 'Unauthorized access'
+                });
+            }
+            if(result){
+                console.log("in the result of bcyrpt compare")
+                return res.status(200).json({
+                    success: 'Welcome to the application!'
+                });
+                return res.status(401).json({
+                    failed: 'Unauthorized access'
+                });
+            }
+            else{
+                return res.status(401).json({
+                    failed: 'Unauthorized access'
+                });
+            }
+        });
+    })
+    .catch(error => {
+        console.log("in the error of mongo");
+        res.status(500).json({
+            error: error
+        })
+    })
 });
 
 module.exports = router;
